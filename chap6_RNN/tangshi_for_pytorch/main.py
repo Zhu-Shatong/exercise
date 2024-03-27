@@ -126,7 +126,6 @@ def generate_batch(batch_size, poems_vec, word_to_int):
 
 def run_training():
     # 处理数据集
-    # poems_vector, word_to_int, vocabularies = process_poems2('./tangshi.txt')
     poems_vector, word_to_int, vocabularies = process_poems1(
         './chap6_RNN/tangshi_for_pytorch/poems.txt')    # 注意这里，改成了对于整个项目的相对路径
     # 生成batch
@@ -143,7 +142,6 @@ def run_training():
     optimizer = optim.RMSprop(rnn_model.parameters(), lr=0.01)
 
     loss_fun = torch.nn.NLLLoss()
-    # rnn_model.load_state_dict(torch.load('./poem_generator_rnn'))  # if you have already trained your model you can load it by this line.
 
     for epoch in range(30):
         batches_inputs, batches_outputs = generate_batch(
@@ -177,7 +175,8 @@ def run_training():
             optimizer.step()
 
             if batch % 20 == 0:
-                torch.save(rnn_model.state_dict(), './poem_generator_rnn')
+                torch.save(rnn_model.state_dict(),
+                           './chap6_RNN/tangshi_for_pytorch/poem_generator_rnn')
                 print("finish  save model")
 
 
@@ -203,14 +202,21 @@ def pretty_print_poem(poem):  # 令打印的结果更工整
 
 
 def gen_poem(begin_word):
-    # poems_vector, word_int_map, vocabularies = process_poems2('./tangshi.txt')  #  use the other dataset to train the network
-    poems_vector, word_int_map, vocabularies = process_poems1('./poems.txt')
+    poems_vector, word_int_map, vocabularies = process_poems1(
+        './chap6_RNN/tangshi_for_pytorch/poems.txt')
+
+    # 如果开始字不在词汇表中，使用默认字
+    if begin_word not in word_int_map:
+        print("字不在词汇表中！")
+        begin_word = "山"
+
     word_embedding = rnn_lstm.word_embedding(
         vocab_length=len(word_int_map) + 1, embedding_dim=100)
     rnn_model = rnn_lstm.RNN_model(batch_sz=64, vocab_len=len(word_int_map) + 1, word_embedding=word_embedding,
                                    embedding_dim=100, lstm_hidden_dim=128)
 
-    rnn_model.load_state_dict(torch.load('./poem_generator_rnn'))
+    rnn_model.load_state_dict(torch.load(
+        './chap6_RNN/tangshi_for_pytorch/poem_generator_rnn'))
 
     # 指定开始的字
 
@@ -222,14 +228,13 @@ def gen_poem(begin_word):
         output = rnn_model(input, is_test=True)
         word = to_word(output.data.tolist()[-1], vocabularies)
         poem += word
-        # print(word)
-        # print(poem)
+
         if len(poem) > 30:
             break
     return poem
 
 
-run_training()  # 如果不是训练阶段 ，请注销这一行 。 网络训练时间很长。
+# run_training()  # 如果不是训练阶段 ，请注销这一行 。 网络训练时间很长。
 
 
 pretty_print_poem(gen_poem("日"))
@@ -237,6 +242,6 @@ pretty_print_poem(gen_poem("红"))
 pretty_print_poem(gen_poem("山"))
 pretty_print_poem(gen_poem("夜"))
 pretty_print_poem(gen_poem("湖"))
-pretty_print_poem(gen_poem("湖"))
-pretty_print_poem(gen_poem("湖"))
+pretty_print_poem(gen_poem("海"))
+pretty_print_poem(gen_poem("月"))
 pretty_print_poem(gen_poem("君"))
